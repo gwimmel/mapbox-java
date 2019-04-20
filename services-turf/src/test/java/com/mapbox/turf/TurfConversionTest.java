@@ -17,7 +17,9 @@ import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.util.Arrays;
 
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class TurfConversionTest extends TestUtils {
 
@@ -76,6 +78,129 @@ public class TurfConversionTest extends TestUtils {
     assertEquals(100,
       TurfConversion.convertLength(1, TurfConstants.UNIT_METERS,
         TurfConstants.UNIT_CENTIMETERS), DELTA);
+  }
+
+  @Test
+  public void combinePointsToMultiPoint() throws Exception {
+    FeatureCollection pointFeatureCollection =
+      FeatureCollection.fromFeatures(
+        new Feature[]{
+          Feature.fromGeometry(Point.fromLngLat(-2.46,
+            27.6835)),
+          Feature.fromGeometry(Point.fromLngLat(41.83,
+            7.3624)),
+        });
+
+    FeatureCollection featureCollectionWithNewMultiPointObject = TurfConversion.combine(pointFeatureCollection);
+    assertNotNull(featureCollectionWithNewMultiPointObject);
+
+    MultiPoint multiPoint = (MultiPoint) featureCollectionWithNewMultiPointObject.features().get(0).geometry();
+    assertNotNull(multiPoint);
+
+    assertEquals(-2.46, multiPoint.coordinates().get(0).longitude(), DELTA);
+    assertEquals(27.6835, multiPoint.coordinates().get(0).latitude(), DELTA);
+    assertEquals(41.83, multiPoint.coordinates().get(1).longitude(), DELTA);
+    assertEquals(7.3624, multiPoint.coordinates().get(1).latitude(), DELTA);
+  }
+
+  @Test
+  public void combineLineStringToMultiLineString() throws Exception {
+    FeatureCollection lineStringFeatureCollection =
+      FeatureCollection.fromFeatures(
+        new Feature[]{
+          Feature.fromGeometry(LineString.fromLngLats(
+            Arrays.asList(Point.fromLngLat(-11.25, 55.7765),
+              Point.fromLngLat(41.1328, 22.91792)))),
+          Feature.fromGeometry(LineString.fromLngLats(
+            Arrays.asList(Point.fromLngLat(3.8671, 19.3111),
+              Point.fromLngLat(20.742, -20.3034))))
+        });
+
+    FeatureCollection featureCollectionWithNewMultiLineStringObject = TurfConversion.combine(lineStringFeatureCollection);
+    assertNotNull(featureCollectionWithNewMultiLineStringObject);
+
+    MultiLineString multiLineString = (MultiLineString) featureCollectionWithNewMultiLineStringObject.features().get(0).geometry();
+    assertNotNull(multiLineString);
+
+    // Checking the first LineString in the MultiLineString
+    assertEquals(-11.25, multiLineString.coordinates().get(0).get(0).longitude(), DELTA);
+    assertEquals(55.7765, multiLineString.coordinates().get(0).get(0).latitude(), DELTA);
+
+    // Checking the second LineString in the MultiLineString
+    assertEquals(41.1328, multiLineString.coordinates().get(0).get(1).longitude(), DELTA);
+    assertEquals(22.91792, multiLineString.coordinates().get(0).get(1).latitude(), DELTA);
+  }
+
+  @Test
+  public void combinePolygonToMultiPolygon() throws Exception {
+    FeatureCollection polygonFeatureCollection =
+      FeatureCollection.fromFeatures(
+        new Feature[]{
+          Feature.fromGeometry(Polygon.fromLngLats(Arrays.asList(
+            Arrays.asList(
+              Point.fromLngLat(61.938950426660604, 5.9765625),
+              Point.fromLngLat(52.696361078274485, 33.046875),
+              Point.fromLngLat(69.90011762668541, 28.828124999999996),
+              Point.fromLngLat(61.938950426660604, 5.9765625))))),
+          Feature.fromGeometry(Polygon.fromLngLats(Arrays.asList(
+            Arrays.asList(
+              Point.fromLngLat(11.42578125, 16.636191878397664),
+              Point.fromLngLat(7.91015625, -9.102096738726443),
+              Point.fromLngLat(31.113281249999996, 17.644022027872726),
+              Point.fromLngLat(11.42578125, 16.636191878397664)
+            ))))
+        });
+
+    FeatureCollection featureCollectionWithNewMultiPolygonObject = TurfConversion.combine(polygonFeatureCollection);
+    assertNotNull(featureCollectionWithNewMultiPolygonObject);
+
+    MultiPolygon multiPolygon = (MultiPolygon) featureCollectionWithNewMultiPolygonObject.features().get(0).geometry();
+    assertNotNull(multiPolygon);
+
+    // Checking the first Polygon in the MultiPolygon
+
+    // Checking the first Point
+    assertEquals(61.938950426660604, multiPolygon.coordinates().get(0).get(0).get(0).longitude(), DELTA);
+    assertEquals(5.9765625, multiPolygon.coordinates().get(0).get(0).get(0).latitude(), DELTA);
+
+    // Checking the second Point
+    assertEquals(52.696361078274485, multiPolygon.coordinates().get(0).get(0).get(1).longitude(), DELTA);
+    assertEquals(33.046875, multiPolygon.coordinates().get(0).get(0).get(1).latitude(), DELTA);
+
+    // Checking the second Polygon in the MultiPolygon
+
+    // Checking the first Point
+    assertEquals(11.42578125, multiPolygon.coordinates().get(1).get(0).get(0).longitude(), DELTA);
+    assertEquals(16.636191878397664, multiPolygon.coordinates().get(1).get(0).get(0).latitude(), DELTA);
+
+    // Checking the second Point
+    assertEquals(7.91015625, multiPolygon.coordinates().get(1).get(0).get(1).longitude(), DELTA);
+    assertEquals(-9.102096738726443, multiPolygon.coordinates().get(1).get(0).get(1).latitude(), DELTA);
+  }
+
+  // TODO: Add test that checks Feature amount
+  @Test
+  public void geometryTypeMixThrowsException() throws TurfException {
+    thrown.expect(TurfException.class);
+    thrown.expectMessage(startsWith("Your FeatureCollection must be of all of the same geometry type."));
+
+    // Create a FeatureCollection with a Point Feature and a Polygon Feature
+    FeatureCollection pointAndPolygonFeatureCollection =
+      FeatureCollection.fromFeatures(
+        new Feature[]{
+          Feature.fromGeometry(Point.fromLngLat(-2.46,
+            27.6835)),
+          Feature.fromGeometry(Polygon.fromLngLats(Arrays.asList(
+            Arrays.asList(
+              Point.fromLngLat(11.42578125, 16.636191878397664),
+              Point.fromLngLat(7.91015625, -9.102096738726443),
+              Point.fromLngLat(31.113281249999996, 17.644022027872726),
+              Point.fromLngLat(11.42578125, 16.636191878397664)
+            ))))
+        });
+
+    // Building a geometry with this FeatureCollection should through an error
+    TurfConversion.combine(pointAndPolygonFeatureCollection);
   }
 
   @Test

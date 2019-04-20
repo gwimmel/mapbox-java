@@ -7,9 +7,16 @@ import android.support.annotation.Nullable;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
+import com.mapbox.geojson.Geometry;
+import com.mapbox.geojson.LineString;
+import com.mapbox.geojson.MultiLineString;
+import com.mapbox.geojson.MultiPoint;
+import com.mapbox.geojson.MultiPolygon;
+import com.mapbox.geojson.Polygon;
 import com.mapbox.turf.TurfConstants.TurfUnitCriteria;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -200,5 +207,61 @@ public final class TurfConversion {
       finalFeatureList.add(Feature.fromGeometry(singlePoint));
     }
     return FeatureCollection.fromFeatures(finalFeatureList);
+
+  }
+
+  /**
+   * Combines a FeatureCollection of all {@link Point}s , {@link LineString}s,
+   * or {@link Polygon} features into {@link MultiPoint}, {@link MultiLineString},
+   * or {@link MultiPolygon}.
+   *
+   * @param featureCollection a {@link FeatureCollection} that has {@link Feature}
+   *                          objects which are all {@link Point}, {@link LineString},
+   *                          or {@link Polygon} geometries.
+   * @return a {@link FeatureCollection} which has a {@link Feature}.
+   *         The {@link Feature} can be used to cast {@link MultiPoint},
+   * {@link MultiLineString}, or {@link MultiPolygon}
+   * @since 4.8.0
+   */
+  public static FeatureCollection combine(@NonNull FeatureCollection featureCollection) {
+    Geometry firstFeatureGeometry = featureCollection.features().get(0).geometry();
+    if (firstFeatureGeometry instanceof Point) {
+      return FeatureCollection.fromFeature(Feature.fromGeometry(
+        MultiPoint.fromLngLats(listOfPoints(featureCollection))));
+    } else if (firstFeatureGeometry instanceof LineString) {
+      return FeatureCollection.fromFeature(Feature.fromGeometry(
+        MultiLineString.fromLngLats(Arrays.asList(listOfPoints(featureCollection)))
+      ));
+    } else if (firstFeatureGeometry instanceof Polygon) {
+      List<Polygon> polygonList = new ArrayList<>();
+      for (Feature singleFeature : featureCollection.features()) {
+        if (singleFeature.geometry() instanceof Polygon) {
+          polygonList.add((Polygon) singleFeature.geometry());
+        } else {
+          throw new TurfException("Your FeatureCollection must be of all of "
+            + "the same geometry type.");
+        }
+      }
+      return FeatureCollection.fromFeature(Feature.fromGeometry(
+        MultiPolygon.fromPolygons(polygonList)));
+    }
+    throw new TurfException("Your FeatureCollection did not include "
+      + "a Point, LineString, or Polygon geometry type. Please pass in "
+      + "a FeatureCollection with two or more Features which are all of "
+      + "the same geometry type.");
+  }
+
+  private static List<Point> listOfPoints(FeatureCollection featureCollection) {
+    List<Point> pointList = new ArrayList<>();
+    for (Feature singleFeature : featureCollection.features()) {
+      if (singleFeature.geometry() instanceof Point) {
+        pointList.add(TurfMeta.getCoord(singleFeature));
+      } else if (singleFeature.geometry() instanceof LineString) {
+        pointList.addAll(TurfMeta.coordAll((LineString) singleFeature.geometry()));
+      } else if (singleFeature.geometry() instanceof Polygon) {
+        pointList.addAll(TurfMeta.coordAll((Polygon) singleFeature.geometry(), true));
+      }
+    }
+    return pointList;
   }
 }
