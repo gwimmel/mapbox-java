@@ -1,30 +1,21 @@
 package com.mapbox.api.geocoding.v5;
 
 import com.mapbox.api.geocoding.v5.models.GeocodingResponse;
-import com.mapbox.core.TestUtils;
 import com.mapbox.core.exceptions.ServicesException;
 import com.mapbox.geojson.BoundingBox;
 import com.mapbox.geojson.Point;
 
-import org.hamcrest.junit.ExpectedException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
-import okhttp3.HttpUrl;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
 import retrofit2.Response;
 
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class MapboxGeocodingTest extends GeocodingTestUtils {
@@ -70,7 +61,7 @@ public class MapboxGeocodingTest extends GeocodingTestUtils {
   public void build_noAccessTokenExceptionThrown() throws Exception {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Missing required properties: accessToken");
-   MapboxGeocoding.builder()
+    MapboxGeocoding.builder()
       .query("1600 pennsylvania ave nw")
       .baseUrl(mockUrl.toString())
       .build();
@@ -186,15 +177,15 @@ public class MapboxGeocodingTest extends GeocodingTestUtils {
   @Test
   public void bbox_getsFormattedCorrectlyForUrl() throws Exception {
     BoundingBox bbox = BoundingBox.fromLngLats(
-            -77.083056, 38.908611, -76.997778, 38.959167);
+      -77.083056, 38.908611, -76.997778, 38.959167);
     MapboxGeocoding mapboxGeocoding = MapboxGeocoding.builder()
-            .accessToken(ACCESS_TOKEN)
-            .baseUrl(mockUrl.toString())
-            .bbox(bbox)
-            .query("1600 pennsylvania ave nw")
-            .build();
+      .accessToken(ACCESS_TOKEN)
+      .baseUrl(mockUrl.toString())
+      .bbox(bbox)
+      .query("1600 pennsylvania ave nw")
+      .build();
     assertEquals("-77.083056,38.908611,-76.997778,38.959167",
-            mapboxGeocoding.cloneCall().request().url().queryParameter("bbox"));
+      mapboxGeocoding.cloneCall().request().url().queryParameter("bbox"));
   }
 
   @Test
@@ -296,6 +287,18 @@ public class MapboxGeocodingTest extends GeocodingTestUtils {
   }
 
   @Test
+  public void routingSanity() throws Exception {
+    MapboxGeocoding mapboxGeocoding = MapboxGeocoding.builder()
+      .accessToken(ACCESS_TOKEN)
+      .query(Point.fromLngLat(-73.989, 40.733))
+      .routing(true)
+      .build();
+    assertNotNull(mapboxGeocoding);
+    Response<GeocodingResponse> response = mapboxGeocoding.executeCall();
+    assertEquals(200, response.code());
+  }
+
+  @Test
   public void fuzzyMatch_getsAddedToUrlCorrectly() throws Exception {
     MapboxGeocoding mapboxGeocoding = MapboxGeocoding.builder()
       .accessToken(ACCESS_TOKEN)
@@ -304,7 +307,46 @@ public class MapboxGeocodingTest extends GeocodingTestUtils {
       .baseUrl(mockUrl.toString())
       .build();
     assertNotNull(mapboxGeocoding);
-    assertTrue(mapboxGeocoding.cloneCall().request().url().toString()
-      .contains("fuzzyMatch=true"));
+    assertTrue(mapboxGeocoding.cloneCall().request().url().toString().contains("fuzzyMatch=true"));
+  }
+
+  @Test
+  public void routing_getsAddedToUrlCorrectly() throws Exception {
+    MapboxGeocoding mapboxGeocoding = MapboxGeocoding.builder()
+      .accessToken(ACCESS_TOKEN)
+      .query(Point.fromLngLat(-73.989,40.733))
+      .routing(true)
+      .baseUrl(mockUrl.toString())
+      .build();
+    assertNotNull(mapboxGeocoding);
+    assertTrue(mapboxGeocoding.cloneCall().request().url().toString().contains("routing=true"));
+  }
+
+  @Test
+  public void routing_routingNavigationInfoArrives() throws Exception {
+    MapboxGeocoding mapboxGeocoding = MapboxGeocoding.builder()
+      .accessToken(ACCESS_TOKEN)
+      .query(Point.fromLngLat(-73.989,40.733))
+      .routing(true)
+      .baseUrl(mockUrl.toString())
+      .build();
+    assertNotNull(mapboxGeocoding);
+    Response<GeocodingResponse> response = mapboxGeocoding.executeCall();
+    assertNotNull(response.body().features().get(0).routingObject());
+    assertNotNull(response.body().features().get(0).routingObject().getAsJsonArray("points"));
+    assertNotNull(response.body().features().get(0).routingObject().getAsJsonArray("coordinates").get(0));
+  }
+
+  @Test
+  public void routing_falsePreventsNavigationInfoFromArriving() throws Exception {
+    MapboxGeocoding mapboxGeocoding = MapboxGeocoding.builder()
+      .accessToken(ACCESS_TOKEN)
+      .query(Point.fromLngLat(-73.989,40.733))
+      .routing(false)
+      .baseUrl(mockUrl.toString())
+      .build();
+    assertNotNull(mapboxGeocoding);
+    Response<GeocodingResponse> response = mapboxGeocoding.executeCall();
+    assertNull(response.body().features().get(0).routingObject());
   }
 }

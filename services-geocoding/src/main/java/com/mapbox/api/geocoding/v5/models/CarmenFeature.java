@@ -272,6 +272,16 @@ public abstract class CarmenFeature implements GeoJson {
   public abstract String language();
 
   /**
+   * A list of recommended navigation destinations corresponding to the feature.
+   * Only applicable for address features.
+   *
+   * @return a {@link JsonObject} with a list of ideal navigation {@link Point}s
+   * @since 4.9.0
+   */
+  @Nullable
+  public abstract JsonObject routingObject();
+
+  /**
    * Gson type adapter for parsing Gson to this class.
    *
    * @param gson the built {@link Gson} object
@@ -481,6 +491,17 @@ public abstract class CarmenFeature implements GeoJson {
      * @since 2.2.0
      */
     public abstract Builder language(@Nullable String language);
+
+    /**
+     * A list of recommended navigation destinations corresponding to the feature.
+     * Only applicable for address features.
+     *
+     * @param properties a {@link JsonObject} which holds a list made up of {@link Point}s
+     *                   which are ideal navigation locations for the specific {@link Feature}.
+     * @return this builder for chaining options together
+     * @since 4.9.0
+     */
+    public abstract Builder routingObject(@Nullable JsonObject properties);
 
     /**
      * Build a new {@link CarmenFeature} object.
