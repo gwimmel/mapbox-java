@@ -275,11 +275,11 @@ public abstract class CarmenFeature implements GeoJson {
    * A list of recommended navigation destinations corresponding to the feature.
    * Only applicable for address features.
    *
-   * @return a {@link JsonObject} with a list of ideal navigation {@link Point}s
+   * @return a {@link RoutingInfo} with a list of ideal navigation {@link Point}s
    * @since 4.9.0
    */
   @Nullable
-  public abstract JsonObject routingObject();
+  public abstract RoutingInfo routing();
 
   /**
    * Gson type adapter for parsing Gson to this class.
@@ -496,12 +496,12 @@ public abstract class CarmenFeature implements GeoJson {
      * A list of recommended navigation destinations corresponding to the feature.
      * Only applicable for address features.
      *
-     * @param properties a {@link JsonObject} which holds a list made up of {@link Point}s
+     * @param routingInfo a {@link RoutingInfo} which holds a list made up of {@link Point}s
      *                   which are ideal navigation locations for the specific {@link Feature}.
      * @return this builder for chaining options together
      * @since 4.9.0
      */
-    public abstract Builder routingObject(@Nullable JsonObject properties);
+    public abstract Builder routing(@Nullable RoutingInfo routingInfo);
 
     /**
      * Build a new {@link CarmenFeature} object.

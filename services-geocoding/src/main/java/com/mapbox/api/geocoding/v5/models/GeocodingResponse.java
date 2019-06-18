@@ -5,6 +5,7 @@ import com.google.auto.value.AutoValue;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
+import com.mapbox.api.geocoding.v5.RoutingInfoTypeAdapter;
 import com.mapbox.geojson.BoundingBox;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.GeometryAdapterFactory;
@@ -38,6 +39,7 @@ public abstract class GeocodingResponse implements Serializable {
     Gson gson = new GsonBuilder()
       .registerTypeAdapterFactory(GeometryAdapterFactory.create())
       .registerTypeAdapter(BoundingBox.class, new BoundingBoxTypeAdapter())
+      .registerTypeAdapter(RoutingInfo.class, new RoutingInfoTypeAdapter())
       .registerTypeAdapterFactory(GeocodingAdapterFactory.create())
       .create();
     return gson.fromJson(json, GeocodingResponse.class);
@@ -119,6 +121,7 @@ public abstract class GeocodingResponse implements Serializable {
     Gson gson = new GsonBuilder()
       .registerTypeAdapterFactory(GeometryAdapterFactory.create())
       .registerTypeAdapter(BoundingBox.class, new BoundingBoxTypeAdapter())
+      .registerTypeAdapter(RoutingInfo.class, new RoutingInfoTypeAdapter())
       .registerTypeAdapterFactory(GeocodingAdapterFactory.create())
       .create();
     return gson.toJson(this, GeocodingResponse.class);
