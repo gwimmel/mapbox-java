@@ -90,11 +90,11 @@ public class MapboxMatrixTest extends TestUtils {
   @Test
   public void testCallSanity() throws ServicesException, IOException {
     MapboxMatrix client = MapboxMatrix.builder()
-      .accessToken(ACCESS_TOKEN)
-      .profile(DirectionsCriteria.PROFILE_DRIVING)
-      .coordinates(positions)
-      .baseUrl(mockUrl.toString())
-      .build();
+        .accessToken(ACCESS_TOKEN)
+        .profile(DirectionsCriteria.PROFILE_DRIVING)
+        .coordinates(positions)
+        .baseUrl(mockUrl.toString())
+        .build();
     Response<MatrixResponse> response = client.executeCall();
     assertEquals(200, response.code());
 
@@ -110,10 +110,10 @@ public class MapboxMatrixTest extends TestUtils {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("Missing required properties: accessToken");
     MapboxMatrix.builder()
-      .baseUrl(mockUrl.toString())
-      .coordinate(Point.fromLngLat(2.0, 2.0))
-      .coordinate(Point.fromLngLat(4.0, 4.0))
-      .build();
+        .baseUrl(mockUrl.toString())
+        .coordinate(Point.fromLngLat(2.0, 2.0))
+        .coordinate(Point.fromLngLat(4.0, 4.0))
+        .build();
   }
 
   @Test
@@ -121,22 +121,22 @@ public class MapboxMatrixTest extends TestUtils {
     thrown.expect(ServicesException.class);
     thrown.expectMessage("Using Mapbox Services requires setting a valid access token.");
     MapboxMatrix.builder()
-      .accessToken("")
-      .baseUrl(mockUrl.toString())
-      .coordinate(Point.fromLngLat(2.0, 2.0))
-      .coordinate(Point.fromLngLat(4.0, 4.0))
-      .build();
+        .accessToken("")
+        .baseUrl(mockUrl.toString())
+        .coordinate(Point.fromLngLat(2.0, 2.0))
+        .coordinate(Point.fromLngLat(4.0, 4.0))
+        .build();
   }
 
   @Test
   public void validCoordinates() throws ServicesException {
     thrown.expect(ServicesException.class);
     thrown.expectMessage(
-      startsWith("At least two coordinates must be provided with your API request."));
+        startsWith("At least two coordinates must be provided with your API request."));
     MapboxMatrix.builder()
-      .accessToken(ACCESS_TOKEN)
-      .profile(DirectionsCriteria.PROFILE_DRIVING)
-      .build();
+        .accessToken(ACCESS_TOKEN)
+        .profile(DirectionsCriteria.PROFILE_DRIVING)
+        .build();
   }
 
   @Test
@@ -151,47 +151,47 @@ public class MapboxMatrixTest extends TestUtils {
     thrown.expect(ServicesException.class);
     thrown.expectMessage(startsWith("Maximum of 25 coordinates are allowed for this API."));
     MapboxMatrix.builder()
-      .accessToken(ACCESS_TOKEN)
-      .profile(DirectionsCriteria.PROFILE_DRIVING)
-      .coordinates(positions)
-      .build();
+        .accessToken(ACCESS_TOKEN)
+        .profile(DirectionsCriteria.PROFILE_DRIVING)
+        .coordinates(positions)
+        .build();
   }
 
   @Test
   public void testUserAgent() throws ServicesException, IOException {
     MapboxMatrix service = MapboxMatrix.builder()
-      .clientAppName("APP")
-      .accessToken(ACCESS_TOKEN)
-      .profile(DirectionsCriteria.PROFILE_DRIVING)
-      .coordinates(positions)
-      .baseUrl(mockUrl.toString())
-      .build();
+        .clientAppName("APP")
+        .accessToken(ACCESS_TOKEN)
+        .profile(DirectionsCriteria.PROFILE_DRIVING)
+        .coordinates(positions)
+        .baseUrl(mockUrl.toString())
+        .build();
     assertTrue(service.executeCall().raw().request().header("User-Agent").contains("APP"));
   }
 
   @Test
   public void request_containsAnnotations() throws ServicesException, IOException {
     MapboxMatrix client = MapboxMatrix.builder()
-            .accessToken(ACCESS_TOKEN)
-            .profile(DirectionsCriteria.PROFILE_WALKING)
-            .coordinates(positions)
-            .addAnnotations(ANNOTATION_DISTANCE, ANNOTATION_DURATION)
-            .sources(0, 2)
-            .build();
+        .accessToken(ACCESS_TOKEN)
+        .profile(DirectionsCriteria.PROFILE_WALKING)
+        .coordinates(positions)
+        .addAnnotations(ANNOTATION_DISTANCE, ANNOTATION_DURATION)
+        .sources(0, 2)
+        .build();
 
     assertTrue(client.cloneCall()
-            .request().url().toString()
-            .contains("annotations=distance"));
+        .request().url().toString()
+        .contains("annotations=distance"));
   }
 
   @Test
   public void request_containsApproaches() throws ServicesException, IOException {
     MapboxMatrix client = MapboxMatrix.builder()
-            .accessToken(ACCESS_TOKEN)
-            .profile(DirectionsCriteria.PROFILE_WALKING)
-            .coordinates(positions)
-            .addApproaches(APPROACH_CURB, APPROACH_CURB, APPROACH_CURB)
-            .build();
+        .accessToken(ACCESS_TOKEN)
+        .profile(DirectionsCriteria.PROFILE_WALKING)
+        .coordinates(positions)
+        .addApproaches(APPROACH_CURB, APPROACH_CURB, APPROACH_CURB)
+        .build();
 
     String c = client.cloneCall().request().url().toString();
 
@@ -202,14 +202,14 @@ public class MapboxMatrixTest extends TestUtils {
   @Test
   public void annotationsAndApproaches() throws ServicesException, IOException {
     MapboxMatrix client = MapboxMatrix.builder()
-      .accessToken(ACCESS_TOKEN)
-      .profile(DirectionsCriteria.PROFILE_WALKING)
-      .coordinates(positions)
-      .addAnnotations(ANNOTATION_DISTANCE, ANNOTATION_DURATION)
-      .addApproaches(APPROACH_CURB, APPROACH_CURB, APPROACH_CURB)
-      .sources(0,2)
-      .baseUrl(mockUrl.toString())
-      .build();
+        .accessToken(ACCESS_TOKEN)
+        .profile(DirectionsCriteria.PROFILE_WALKING)
+        .coordinates(positions)
+        .addAnnotations(ANNOTATION_DISTANCE, ANNOTATION_DURATION)
+        .addApproaches(APPROACH_CURB, APPROACH_CURB, APPROACH_CURB)
+        .sources(0, 2)
+        .baseUrl(mockUrl.toString())
+        .build();
 
     Response<MatrixResponse> response = client.executeCall();
     assertEquals(200, response.code());
@@ -217,7 +217,7 @@ public class MapboxMatrixTest extends TestUtils {
     assertEquals(1, response.body().distances().size());
     assertEquals(1, response.body().durations().size());
     assertEquals(-122.461997, response.body().sources().get(0).location().longitude(), DELTA);
-    assertEquals(-122.420019, response.body().destinations().get(0).location().longitude(),  DELTA);
+    assertEquals(-122.420019, response.body().destinations().get(0).location().longitude(), DELTA);
     assertEquals(19711.7, response.body().durations().get(0)[2], DELTA);
     assertEquals(27192.3, response.body().distances().get(0)[2], DELTA);
     assertEquals("McAllister Street", response.body().destinations().get(0).name());
