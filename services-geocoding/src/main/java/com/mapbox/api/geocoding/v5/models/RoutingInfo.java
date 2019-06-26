@@ -1,5 +1,7 @@
 package com.mapbox.api.geocoding.v5.models;
 
+import android.support.annotation.NonNull;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
@@ -12,34 +14,27 @@ import java.util.List;
 
 public class RoutingInfo implements Serializable {
 
-  private List<Point> listOfRoutablePoints;
+  private RoutableDestination[] routableDestinationArray;
 
-  RoutingInfo(List<Point> listOfRoutablePoints) {
-    this.listOfRoutablePoints = listOfRoutablePoints;
-  }
-
-  /**
-   * Create a new instance of this class by passing in a formatted valid JSON String.
-   *
-   * @param json a formatted valid JSON string defining a list of routable points.
-   * @return a new instance of this class defined by the values passed inside this static factory
-   * method
-   * @since 4.9.0
-   */
-  public static RoutingInfo fromJson(String json) {
-    Gson gson = new GsonBuilder()
-      .registerTypeAdapter(RoutingInfo.class, new RoutingInfoTypeAdapter())
-      .create();
-    return gson.fromJson(json, RoutingInfo.class);
+  RoutingInfo(RoutableDestination[] routableDestinationArray) {
+    this.routableDestinationArray = routableDestinationArray;
   }
 
   /**
    * Create a {@link RoutingInfo} object with a list of {@link Point}s.
    *
-   * @param listOfRoutablePoints
+   * @param pointList
+   * @return a RoutingInfo object.
+   * @since 4.9.0
    */
-  public static RoutingInfo fromPointList(List<Point> listOfRoutablePoints) {
-    return new RoutingInfo(listOfRoutablePoints);
+  public static RoutingInfo fromPoints(@NonNull List<Point> pointList) {
+    RoutableDestination[] routableDestinationsArray = new RoutableDestination[pointList.size()];
+    for (Point singlePoint : pointList) {
+      RoutableDestination singleRoutableDestination = new RoutableDestination(
+        Arrays.asList(singlePoint.longitude(), singlePoint.latitude()));
+      routableDestinationsArray[routableDestinationsArray.length + 1] = singleRoutableDestination;
+    }
+    return new RoutingInfo(routableDestinationsArray);
   }
 
   /**
@@ -47,9 +42,13 @@ public class RoutingInfo implements Serializable {
    *
    * @param routablePoint the single {@link Point} that's best for routing
    *                      to the {@link com.mapbox.geojson.Feature}.
+   * @since 4.9.0
    */
-  public static RoutingInfo fromPoint(Point routablePoint) {
-    return new RoutingInfo(Arrays.asList(routablePoint));
+  public static RoutingInfo fromPoint(@NonNull Point routablePoint) {
+    return new RoutingInfo(new RoutableDestination[] {
+      new RoutableDestination(
+        Arrays.asList(routablePoint.longitude(), routablePoint.latitude()))
+    });
   }
 
   /**
@@ -59,8 +58,19 @@ public class RoutingInfo implements Serializable {
    * @return a list of {@link Point} objects.
    * @since 4.9.0
    */
-  public List<Point> routablePoints() {
-    return listOfRoutablePoints;
+  public RoutableDestination[] routableDestinations() {
+    return routableDestinationArray;
+  }
+
+  /**
+   * Use a {@link Point} to add a coordinate to the array of routable options attributed
+   * to that single {@link com.mapbox.geojson.Feature}.
+   *
+   * @param pointToAdd the location to add.
+   */
+  public void addDestination(Point pointToAdd) {
+    routableDestinationArray[routableDestinationArray.length + 1] =
+      new RoutableDestination(Arrays.asList(pointToAdd.longitude(), pointToAdd.latitude()));
   }
 
   /**
@@ -90,35 +100,29 @@ public class RoutingInfo implements Serializable {
 
   @Override
   public String toString() {
-    StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append("\"routable_points\":{\"points\":[");
-    for (Point singlePoint : listOfRoutablePoints) {
-      stringBuilder.append("{\"coordinates\":" + singlePoint.longitude() + "," + singlePoint.latitude() + "}");
-    }
-    stringBuilder.append("]}");
-    return stringBuilder.toString();
+    return "RoutableDestination [routableDestinationArray = " + routableDestinationArray + "]";
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == this) {
-      return true;
-    }
-    if (obj instanceof RoutingInfo) {
-      RoutingInfo that = (RoutingInfo) obj;
-      return (this.southwest.equals(that.southwest()))
-        && (this.northeast.equals(that.northeast()));
-    }
-    return false;
+  /**
+   * Create a new instance of this class by passing in a formatted valid JSON String.
+   *
+   * @param json a formatted valid JSON string defining a list of routable points.
+   * @return a new instance of this class defined by the values passed inside this static factory
+   * method
+   * @since 4.9.0
+   */
+  public static RoutingInfo fromJson(@NonNull String json) {
+    Gson gson = new GsonBuilder()
+      .registerTypeAdapter(RoutingInfo.class, new RoutingInfoTypeAdapter())
+      .create();
+    return gson.fromJson(json, RoutingInfo.class);
   }
 
   @Override
   public int hashCode() {
     int hashCode = 1;
     hashCode *= 1000003;
-    hashCode ^= southwest.hashCode();
-    hashCode *= 1000003;
-    hashCode ^= northeast.hashCode();
+    hashCode ^= routableDestinationArray.hashCode();
     return hashCode;
   }
 }

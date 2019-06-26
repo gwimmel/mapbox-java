@@ -496,12 +496,15 @@ public abstract class CarmenFeature implements GeoJson {
      * A list of recommended navigation destinations corresponding to the feature.
      * Only applicable for address features.
      *
-     * @param routingInfo a {@link RoutingInfo} which holds a list made up of {@link Point}s
-     *                   which are ideal navigation locations for the specific {@link Feature}.
+     * @param routingInfo a {@link RoutingInfo} which holds a list made up of {@link RoutingInfo}s
+     *                    objects, which are ideal navigation locations for the specific {@link Feature}.
      * @return this builder for chaining options together
      * @since 4.9.0
      */
-    public abstract Builder routing(@Nullable RoutingInfo routingInfo);
+    public abstract Builder routing(@Nullable RoutingInfo routingInfo){
+      RoutingInfo routingInfo1 = RoutingInfo.fromPoint(Point.fromLngLat(44, 44));
+      Point singlePoint = routingInfo1.routableDestinations()[2].toPoint();
+    }
 
     /**
      * Build a new {@link CarmenFeature} object.

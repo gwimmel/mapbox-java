@@ -24,7 +24,7 @@ public class RoutingInfoTypeAdapter extends TypeAdapter<RoutingInfo> {
 
     out.beginArray();
 
-    List<Point> pointList = value.routablePoints();
+    List<Point> pointList = value.routableDestinations();
 
     for (Point singlePoint: pointList) {
       List<Double> unshiftedCoordinates = CoordinateShifterManager.getCoordinateShifter().unshiftPoint(singlePoint);
@@ -51,6 +51,6 @@ public class RoutingInfoTypeAdapter extends TypeAdapter<RoutingInfo> {
     if (pointList.size() == 1) {
       return RoutingInfo.fromPoint(pointList.get(0));
     }
-    return RoutingInfo.fromPointList(pointList);
+    return RoutingInfo.fromPoints(pointList);
   }
 }
